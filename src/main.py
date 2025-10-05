@@ -1,6 +1,11 @@
+from database_manager import DatabaseManager
+from settings_manager import SettingsManager
+from commands.list_commands import ListCommands
+from commands.settings_commands import SettingsCommands
+
 import os
 import discord
-from discord.ext import commands
+from discord import app_commands
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -8,20 +13,20 @@ token = os.getenv("DISCORD_TOKEN")
 
 intents = discord.Intents.default()
 
-bot = commands.Bot(command_prefix="/", intents=intents)
+client = discord.Client(intents=intents)
+tree = app_commands.CommandTree(client)
 
-@bot.event
+@client.event
 async def on_ready():
-    print(f"Logged in as {bot.user} (ID: {bot.user.id})")
-    await bot.tree.sync()
+    print(f"Logged in as {client.user} (ID: {client.user.id})")
+    await tree.sync()
     print("Slash commands synced.")
 
-@bot.tree.command(name="ping", description="Check if the bot is alive.")
-async def ping(interaction: discord.Interaction):
-    await interaction.response.send_message("Pong!")
+settings_manager = SettingsManager()
+database_manager = DatabaseManager()
+list_cog = ListCommands(settings_manager, database_manager)
+list_cog.bind_to_tree(tree)
+settings_cog = SettingsCommands(settings_manager)
+settings_cog.bind_to_tree(tree)
 
-@bot.tree.command(name="repeat", description="Repeat your message back to you.")
-async def repeat(interaction: discord.Interaction, message: str):
-    await interaction.response.send_message(message)
-
-bot.run(token)
+client.run(token)
