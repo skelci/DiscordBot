@@ -31,7 +31,12 @@ class UserCommands(commands.Cog):
         if not users:
             await interaction.response.send_message("No users found.")
             return
-        users = sorted(users, key=lambda x: locale.strxfrm(x[1]))
+        
+        def get_sort_key(name):
+            splited = name.split(' ')
+            return locale.strxfrm(' '.join(splited[1:] + splited[:1]))
+
+        users = sorted(users, key=lambda x: get_sort_key(x[1]))
         user_list = "\n".join(f"1. {user[1]}" for user in users)
         await interaction.response.send_message(f"Users:\n{user_list}")
 
