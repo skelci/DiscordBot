@@ -16,7 +16,7 @@ class SettingsCommands(commands.Cog):
     async def set_max_place(self, interaction: discord.Interaction, max_place: int = None):
         if max_place is None:
             max_place = self.settings_manager.get("max_place", 25)
-            await interaction.response.send_message(f"Current maximum place is {max_place}.", ephemeral=True)
+            await interaction.response.send_message(f"Current maximum place is {max_place}.")
             return
         if max_place < 1:
             await interaction.response.send_message("Please provide a valid maximum place (positive integer).", ephemeral=True)
