@@ -46,8 +46,12 @@ class DatabaseManager:
 
     def get_users(self):
         with self.__cursor() as cur:
-            cur.execute("SELECT user_id, name FROM users;")
+            cur.execute("SELECT user_id, name FROM users ORDER BY name;")
             return cur.fetchall()
+        
+    def remove_user(self, user_id):
+        with self.__cursor() as cur:
+            cur.execute("DELETE FROM users WHERE user_id = ?;", (user_id,))
 
     def create_list(self, name):
         with self.__cursor() as cur:

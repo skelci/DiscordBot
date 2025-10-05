@@ -9,7 +9,6 @@ class ListCommands(commands.Cog):
         self.database_manager = database_manager
     
     def bind_to_tree(self, tree):
-        tree.add_command(self.add_user)
         tree.add_command(self.create_list)
         tree.add_command(self.get_lists)
         tree.add_command(self.add_to_list)
@@ -34,37 +33,28 @@ class ListCommands(commands.Cog):
         interaction: Interaction,
         current: str,
     ) -> list[app_commands.Choice[int]]:
-        if not current.isdigit():
-            return []
-        current_int = int(current)
-        if current_int < 1:
-            return []
+        if not current == "":
+            if not current.isdigit():
+                return []
+            current_int = int(current)
+            if current_int < 1:
+                return []
         
         max_place = self.settings_manager.get("max_place", 25)
         available_places = set([i for i in range(1, max_place + 1)])
         for entry in self.database_manager.get_list_entries(interaction.namespace.list_name):
-            if entry[2] in set:
-                set.remove(entry[2])
+            if entry[2] in available_places:
+                available_places.remove(entry[2])
 
         return [
             app_commands.Choice(name=str(i), value=i)
-            for i in available_places if str(i).startswith(current)
+            for i in available_places if (str(i).startswith(current) or current == "")
         ][:25]
     
 
     def verify_place(self, place: int) -> bool:
         max_place = self.settings_manager.get("max_place", 25)
         return 1 <= place <= max_place
-
-
-    @app_commands.command(name="add-user", description="Add a user.")
-    @app_commands.checks.has_permissions(administrator=True)
-    async def add_user(self, interaction: discord.Interaction, member: discord.Member):
-        if member.id in [user[1] for user in self.database_manager.get_users()]:
-            await interaction.response.send_message(f"User @{member.display_name} already exists.", ephemeral=True)
-            return
-        self.database_manager.add_user(member.id, member.display_name)
-        await interaction.response.send_message(f"Successfully added user @{member.display_name}.")
 
 
     @app_commands.command(name="create-list", description="Create a new list.")
@@ -170,7 +160,7 @@ class ListCommands(commands.Cog):
         
         entries_sorted = sorted(entries, key=lambda x: x[2])  # Sort by place
         entry_lines = [f"{entry[2]}. {entry[1]}" for entry in entries_sorted]
-        response = f"Entries in list `{list_name}`:\n" + "\n".join(entry_lines)
+        response = f"Entries in list `{list_name}`:\n```" + "\n".join(entry_lines) + "```"
         
         await interaction.response.send_message(response)
 

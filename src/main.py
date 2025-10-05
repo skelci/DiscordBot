@@ -2,6 +2,7 @@ from database_manager import DatabaseManager
 from settings_manager import SettingsManager
 from commands.list_commands import ListCommands
 from commands.settings_commands import SettingsCommands
+from commands.user_commands import UserCommands
 
 import os
 import discord
@@ -28,5 +29,7 @@ list_cog = ListCommands(settings_manager, database_manager)
 list_cog.bind_to_tree(tree)
 settings_cog = SettingsCommands(settings_manager)
 settings_cog.bind_to_tree(tree)
+user_cog = UserCommands(database_manager)
+user_cog.bind_to_tree(tree)
 
 client.run(token)

@@ -1,6 +1,6 @@
 from discord.ext import commands
 import discord
-from discord import app_commands, Interaction
+from discord import app_commands
 
 
 class SettingsCommands(commands.Cog):
