@@ -1,11 +1,13 @@
 from discord.ext import commands
 import discord
 from discord import app_commands
+import locale
 
 
 class UserCommands(commands.Cog):
     def __init__(self, database_manager):
         self.database_manager = database_manager
+        locale.setlocale(locale.LC_COLLATE, "sl_SI.UTF-8")
     
     def bind_to_tree(self, tree):
         tree.add_command(self.add_user)
@@ -29,7 +31,7 @@ class UserCommands(commands.Cog):
         if not users:
             await interaction.response.send_message("No users found.")
             return
-        users = sorted(users, key=lambda x: x[1].split(' ')[1:])
+        users = sorted(users, key=lambda x: locale.strxfrm(x[1]))
         user_list = "\n".join(f"1. {user[1]}" for user in users)
         await interaction.response.send_message(f"Users:\n{user_list}")
 
