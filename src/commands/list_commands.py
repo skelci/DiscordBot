@@ -15,6 +15,7 @@ class ListCommands(commands.Cog):
         tree.add_command(self.assign_to_list)
         tree.add_command(self.remove_from_list)
         tree.add_command(self.view_list)
+        tree.add_command(self.set_next_in_line)
 
     async def list_name_autocomplete(
         self,
@@ -146,6 +147,23 @@ class ListCommands(commands.Cog):
         self.database_manager.remove_list_entry(list_name, member.id)
         await interaction.response.send_message(f"Successfully removed @{member.display_name} from list `{list_name}`.")
 
+    @app_commands.command(name="next-in-line", description="Set the next user in line. If no place is provided, it will increment the current next in line by 1.")
+    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.autocomplete(list_name=list_name_autocomplete)
+    async def set_next_in_line(self, interaction: discord.Interaction, list_name: str, place: int = -1):
+        if not self.verify_place(place) and place != -1:
+            await interaction.response.send_message(f"Please provide a valid place (1-{self.settings_manager.get('max_place', 25)}).", ephemeral=True)
+            return
+
+        lst = self.database_manager.get_list(list_name)
+        if not lst:
+            await interaction.response.send_message(f"List `{list_name}` does not exist.", ephemeral=True)
+            return
+
+        self.database_manager.set_next_in_line(list_name, place)
+        place = self.database_manager.get_list(list_name)[2]
+        await interaction.response.send_message(f"Successfully set next in line for list `{list_name}` to place {place}.")
+
     @app_commands.command(name="view-list", description="View entries in a list.")
     @app_commands.autocomplete(list_name=list_name_autocomplete)
     async def view_list(self, interaction: discord.Interaction, list_name: str):
@@ -158,8 +176,10 @@ class ListCommands(commands.Cog):
             await interaction.response.send_message(f"List `{list_name}` is empty.")
             return
         
+        next_in_line = self.database_manager.get_list(list_name)[2]
+        
         entries_sorted = sorted(entries, key=lambda x: x[2])  # Sort by place
-        entry_lines = [f"{entry[2]}. {entry[1]}" for entry in entries_sorted]
+        entry_lines = [f'{entry[2]}. {entry[1]}{" <-- Next" if entry[2] == next_in_line else ""}' for entry in entries_sorted]
         response = f"Entries in list `{list_name}`:\n```" + "\n".join(entry_lines) + "```"
         
         await interaction.response.send_message(response)

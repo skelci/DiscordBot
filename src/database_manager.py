@@ -25,6 +25,7 @@ class DatabaseManager:
                 CREATE TABLE IF NOT EXISTS lists (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL UNIQUE,
+                    next_in_line INTEGER DEFAULT 1,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
             """)
@@ -59,8 +60,19 @@ class DatabaseManager:
 
     def get_lists(self):
         with self.__cursor() as cur:
-            cur.execute("SELECT id, name, created_at FROM lists ORDER BY created_at DESC;")
+            cur.execute("SELECT id, name, next_in_line, created_at FROM lists ORDER BY created_at DESC;")
             return cur.fetchall()
+
+    def get_list(self, name):
+        with self.__cursor() as cur:
+            cur.execute("SELECT id, name, next_in_line, created_at FROM lists WHERE name = ?;", (name,))
+            return cur.fetchone()
+        
+    def set_next_in_line(self, list_name, place):
+        with self.__cursor() as cur:
+            if place == -1:
+                place = self.get_list(list_name)[2] + 1
+            cur.execute("UPDATE lists SET next_in_line = ? WHERE name = ?;", (place, list_name))
         
     def get_list_id(self, name):
         with self.__cursor() as cur:
