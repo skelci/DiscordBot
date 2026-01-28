@@ -104,3 +104,26 @@ class DatabaseManager:
                 WHERE l.name = ?;
             """, (list_name,))
             return cur.fetchall()
+
+    def swap_list_entries(self, list_name, user1_id, user2_id):
+        list_id = self.get_list_id(list_name)
+        if list_id is None:
+            raise ValueError(f"List '{list_name}' does not exist.")
+        
+        with self.__cursor() as cur:
+            # Get places
+            cur.execute("SELECT place FROM list_entries WHERE list_id = ? AND user_id = ?;", (list_id, user1_id))
+            res1 = cur.fetchone()
+            if not res1:
+                raise ValueError(f"User with ID {user1_id} is not in list '{list_name}'.")
+            place1 = res1[0]
+            
+            cur.execute("SELECT place FROM list_entries WHERE list_id = ? AND user_id = ?;", (list_id, user2_id))
+            res2 = cur.fetchone()
+            if not res2:
+                raise ValueError(f"User with ID {user2_id} is not in list '{list_name}'.")
+            place2 = res2[0]
+
+            # Swap
+            cur.execute("UPDATE list_entries SET place = ? WHERE list_id = ? AND user_id = ?;", (place2, list_id, user1_id))
+            cur.execute("UPDATE list_entries SET place = ? WHERE list_id = ? AND user_id = ?;", (place1, list_id, user2_id))

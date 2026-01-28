@@ -16,6 +16,7 @@ class ListCommands(commands.Cog):
         tree.add_command(self.remove_from_list)
         tree.add_command(self.view_list)
         tree.add_command(self.set_next_in_line)
+        tree.add_command(self.swap_users)
 
     async def list_name_autocomplete(
         self,
@@ -183,4 +184,16 @@ class ListCommands(commands.Cog):
         response = f"Entries in list `{list_name}`:\n```" + "\n".join(entry_lines) + "```"
         
         await interaction.response.send_message(response)
+
+    @app_commands.command(name="swap-users", description="Swap two users in a list.")
+    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.autocomplete(list_name=list_name_autocomplete)
+    async def swap_users(self, interaction: Interaction, list_name: str, user1: discord.User, user2: discord.User):
+        try:
+           self.database_manager.swap_list_entries(list_name, user1.id, user2.id)
+           await interaction.response.send_message(f"Swapped {user1.mention} and {user2.mention} in list `{list_name}`.")
+        except ValueError as e:
+           await interaction.response.send_message(str(e), ephemeral=True)
+        except Exception as e:
+           await interaction.response.send_message(f"An error occurred: {e}", ephemeral=True)
 
