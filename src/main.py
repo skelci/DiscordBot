@@ -3,6 +3,7 @@ from settings_manager import SettingsManager
 from commands.list_commands import ListCommands
 from commands.settings_commands import SettingsCommands
 from commands.user_commands import UserCommands
+from commands.learning_commands import LearningCommands
 
 import os
 import discord
@@ -31,5 +32,7 @@ settings_cog = SettingsCommands(settings_manager)
 settings_cog.bind_to_tree(tree)
 user_cog = UserCommands(database_manager)
 user_cog.bind_to_tree(tree)
+learning_cog = LearningCommands(database_manager)
+learning_cog.bind_to_tree(tree)
 
 client.run(token)
