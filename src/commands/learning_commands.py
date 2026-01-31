@@ -167,6 +167,9 @@ class LearningCommands(commands.Cog):
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def learn(self, interaction: Interaction):
+        if interaction.user.id in self.active_sessions:
+            await interaction.response.send_message("You already have an active learning session. Use `/guess` to answer or finish it.", ephemeral=True)
+            return
         await self._send_next_word(interaction, "Starting learning session!")
 
     @app_commands.command(name="guess", description="Submit an answer.")
@@ -276,16 +279,18 @@ class LearningCommands(commands.Cog):
             learned_scores = [1/w[3] for w in words_data]
             
             not_learned_count = sum(1 for s in learned_scores if s <= 1.000001)
-            avg_score = sum(learned_scores) / total_words
+            sum_score = sum(learned_scores)
+            avg_score = sum_score / total_words
             min_score = min(learned_scores)
             max_score = max(learned_scores)
 
             embed = discord.Embed(title=f"Learning Stats: {list_name}", color=discord.Color.blue())
-            embed.add_field(name="Total Words", value=str(total_words), inline=True)
-            embed.add_field(name="Words To Learn", value=str(not_learned_count), inline=True)
-            embed.add_field(name="Avg Score", value=f"{avg_score:.2f}", inline=True)
-            embed.add_field(name="Min Score", value=f"{min_score:.2f}", inline=True)
-            embed.add_field(name="Max Score", value=f"{max_score:.2f}", inline=True)
+            embed.add_field(name="Total Words", value=str(total_words), inline=False)
+            embed.add_field(name="Words To Learn", value=str(not_learned_count), inline=False)
+            embed.add_field(name="Total Score", value=f"{sum_score:.2f}", inline=False)
+            embed.add_field(name="Avg Score", value=f"{avg_score:.2f}", inline=False)
+            embed.add_field(name="Min Score", value=f"{min_score:.2f}", inline=False)
+            embed.add_field(name="Max Score", value=f"{max_score:.2f}", inline=False)
             
             await interaction.response.send_message(embed=embed)
 
